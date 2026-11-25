@@ -1,0 +1,49 @@
+name: Generate Suara ElevenLabs
+
+on:
+  workflow_dispatch:
+    inputs:
+      batas:
+        description: 'Berapa kalimat yang dibuat? (5 = tes dulu, 0 = semua sisanya)'
+        required: true
+        default: '5'
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Buat rekaman narator
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
+          BATAS: ${{ inputs.batas }}
+        run: python tools/elevenlabs.py
+
+      - name: Simpan rekaman ke repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/src/main/assets/narasi_manual
+          if git diff --cached --quiet; then
+            echo "Tidak ada rekaman baru."
+          else
+            git commit -m "Tambah rekaman narator ElevenLabs"
+            git push
+          fi
+
+  build:
+    needs: generate
+    uses: ./.github/workflows/build.yml
