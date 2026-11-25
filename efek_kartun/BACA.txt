@@ -1,0 +1,4 @@
+Efek suara kartun buatan sendiri (disintesis pakai kode, bebas dipakai, tanpa lisensi pihak lain).
+Untuk hewan yang hampir tidak bersuara / susah dicari suaranya.
+Cara pakai: copy file yang kamu butuhkan ke app/src/main/assets/sounds/
+JANGAN timpa file suara asli yang sudah kamu punya kalau suaranya sudah cocok.

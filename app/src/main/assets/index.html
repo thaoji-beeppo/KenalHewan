@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Kenal Hewan</title>
+<style>
+/*
+VOICE: riang, lembut, super sederhana — untuk balita 2 tahun, nyaris tanpa teks
+IDEA: buku bergambar papan (board book) yang bisa bicara
+PICTURE: satu hewan raksasa di tengah pemandangan habitatnya
+COLOUR and TYPE: langit cerah, rumput hijau, laut biru; huruf tebal membulat
+LAYOUT: target sentuh sangat besar, satu aksi per layar
+*/
+:root{--sky1:#7fd3ff;--sky2:#c9efff;--ground:#7ed957;--ground2:#5bbf3a;--ink:#2b2340;--sun:#ffd93b}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+html,body{height:100%;overflow:hidden;font-family:"Nunito","Baloo 2",system-ui,sans-serif;color:var(--ink);background:var(--sky1)}
+body{font-weight:900}
+.screen{position:fixed;inset:0;display:none;flex-direction:column;overflow:hidden}
+.screen.on{display:flex}
+/* pemandangan */
+.scene{position:absolute;inset:0;background:linear-gradient(var(--sky1),var(--sky2) 65%);transition:background .6s;z-index:0}
+.scene .sun{position:absolute;top:6vmin;right:8vmin;width:20vmin;height:20vmin;border-radius:50%;background:var(--sun);box-shadow:0 0 0 3vmin #ffe9864d,0 0 0 6vmin #ffe98626;animation:spin 18s linear infinite}
+.scene .cloud{position:absolute;width:26vmin;height:9vmin;background:#fff;border-radius:9vmin;opacity:.95;animation:drift 40s linear infinite}
+.scene .cloud::before,.scene .cloud::after{content:"";position:absolute;background:#fff;border-radius:50%}
+.scene .cloud::before{width:11vmin;height:11vmin;left:4vmin;top:-5vmin}
+.scene .cloud::after{width:14vmin;height:14vmin;left:10vmin;top:-8vmin}
+.scene .hill{position:absolute;left:-20%;right:-20%;bottom:-6vh;height:34vh;background:var(--ground);border-radius:50% 50% 0 0;box-shadow:inset 0 2.5vh 0 #ffffff33}
+.scene .hill.back{bottom:2vh;left:-40%;right:10%;background:var(--ground2);height:30vh}
+.scene .bub{position:absolute;bottom:-10vmin;width:5vmin;height:5vmin;border-radius:50%;border:.6vmin solid #ffffffaa;animation:rise 9s linear infinite;display:none}
+body.h-laut .scene .bub{display:block}
+body.h-laut .scene .sun,body.h-laut .scene .cloud{display:none}
+body.h-hutan .scene .sun{background:#fff3a6}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes drift{from{transform:translateX(110vw)}to{transform:translateX(-40vw)}}
+@keyframes rise{to{transform:translateY(-120vh)}}
+/* tombol umum */
+.btn{border:0;background:#fff;color:var(--ink);border-radius:999px;box-shadow:0 1vmin 0 #00000026;font:inherit;display:grid;place-items:center;cursor:pointer;transition:transform .12s}
+.btn:active{transform:scale(.9) translateY(.5vmin);box-shadow:0 .4vmin 0 #00000026}
+.top{position:relative;z-index:3;display:flex;align-items:center;gap:2.5vmin;padding:3vmin 3vmin 0}
+.home-btn{width:15vmin;height:15vmin;font-size:8vmin;flex:none}
+.tabs{display:flex;gap:2vmin;margin-left:auto}
+.tab{width:13vmin;height:13vmin;font-size:7.5vmin;opacity:.7}
+.tab.on{opacity:1;outline:1.2vmin solid #ffcf33;transform:scale(1.08)}
+.stars{margin-left:auto;background:#fff;border-radius:999px;padding:1.5vmin 4vmin;font-size:7vmin;box-shadow:0 1vmin 0 #00000026;white-space:nowrap}
+/* HOME */
+#home .scene{--sky1:#8fdcff;--sky2:#e3f7ff}
+.title{position:relative;z-index:2;text-align:center;margin-top:8vh;font-size:clamp(44px,13vmin,110px);line-height:1;color:#fff;letter-spacing:.02em;
+  text-shadow:0 .9vmin 0 #ff7a59,0 1.8vmin 0 #00000022;-webkit-text-stroke:.5vmin #ff7a59;animation:wob 3s ease-in-out infinite}
+.sub{position:relative;z-index:2;text-align:center;font-size:clamp(18px,4.5vmin,34px);color:#1d5f8a;margin-top:2vh}
+.menu{position:relative;z-index:2;flex:1;display:flex;flex-wrap:wrap;align-content:center;justify-content:center;gap:4vmin;padding:2vmin 4vmin 26vh}
+.card{width:min(34vmin,280px);aspect-ratio:1/1.12;border-radius:7vmin;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1vmin;font-size:clamp(16px,4.6vmin,34px)}
+.card .ic{font-size:min(17vmin,140px);line-height:1;animation:bob 2.2s ease-in-out infinite}
+.card:nth-child(2) .ic{animation-delay:-.7s}.card:nth-child(3) .ic{animation-delay:-1.4s}
+.c1{background:#ffd25e}.c2{background:#ff9fbf}.c3{background:#9fe6ff}
+.parade{position:absolute;z-index:2;bottom:4vh;left:0;white-space:nowrap;font-size:13vmin;animation:walk 26s linear infinite}
+.parade span{display:inline-block;margin-right:6vmin;animation:hop .6s ease-in-out infinite alternate}
+.parade span:nth-child(even){animation-delay:-.3s}
+@keyframes walk{from{transform:translateX(100vw)}to{transform:translateX(-100%)}}
+@keyframes hop{to{transform:translateY(-2.5vmin) rotate(-6deg)}}
+@keyframes bob{50%{transform:translateY(-2vmin) rotate(4deg)}}
+@keyframes wob{50%{transform:rotate(-2deg) scale(1.03)}}
+.lock{position:absolute;z-index:4;right:3vmin;top:3vmin;width:12vmin;height:12vmin;font-size:6vmin;opacity:.55}
+.lock svg{position:absolute;inset:-1vmin;width:calc(100% + 2vmin);height:calc(100% + 2vmin);transform:rotate(-90deg)}
+.lock circle{fill:none;stroke:#ff5a5a;stroke-width:5;stroke-dasharray:283;stroke-dashoffset:283}
+.lock.hold circle{transition:stroke-dashoffset 2s linear;stroke-dashoffset:0}
+.credit{position:absolute;z-index:3;left:3vmin;top:3vmin;font-size:11px;font-weight:700;color:#1d5f8a;opacity:.6}
+.hint{position:absolute;z-index:4;right:3vmin;top:17vmin;background:#000a;color:#fff;font-size:14px;padding:6px 10px;border-radius:10px;opacity:0;transition:opacity .3s;font-weight:700}
+.hint.show{opacity:1}
+/* KENALAN */
+.stage{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.animal{position:relative;z-index:1;font-size:min(52vmin,62vh);line-height:1;filter:drop-shadow(0 3vmin 0 #0000002a);animation:bob 2.6s ease-in-out infinite;cursor:pointer}
+.animal.jump{animation:jump .7s cubic-bezier(.3,1.6,.5,1)}
+@keyframes jump{0%{transform:scale(1)}20%{transform:scale(1.15,.8)}50%{transform:translateY(-8vmin) scale(.92,1.12) rotate(-6deg)}80%{transform:scale(1.06,.94)}100%{transform:none}}
+.say{position:absolute;z-index:6;top:2vh;left:50%;transform:translateX(-50%) scale(0);background:#fff;border-radius:6vmin;padding:2vmin 5vmin;font-size:clamp(28px,9vmin,80px);white-space:nowrap;box-shadow:0 1vmin 0 #00000026;transition:transform .35s cubic-bezier(.3,1.7,.5,1)}
+.say::after{content:"";position:absolute;bottom:-3vmin;left:50%;margin-left:-3vmin;border:3vmin solid transparent;border-top-color:#fff;border-bottom:0}
+.say.show{transform:translateX(-50%) scale(1)}
+.name{margin-top:2vh;font-size:clamp(36px,11vmin,96px);color:#fff;-webkit-text-stroke:.45vmin #2b2340;text-shadow:0 .8vmin 0 #2b2340;line-height:1.05;text-align:center}
+.nav{position:relative;z-index:3;display:flex;justify-content:space-between;align-items:center;padding:0 4vmin 4vmin}
+.arrow{width:20vmin;height:20vmin;font-size:10vmin;background:#ffcf33}
+.dots{display:flex;gap:1.6vmin;flex-wrap:wrap;justify-content:center;max-width:50vw}
+.dots i{width:2.6vmin;height:2.6vmin;border-radius:50%;background:#ffffff88}
+.dots i.on{background:#fff;transform:scale(1.5)}
+/* TEBAK */
+.ask{position:relative;z-index:2;text-align:center;font-size:clamp(32px,10vmin,90px);color:#fff;-webkit-text-stroke:.45vmin #2b2340;text-shadow:0 .8vmin 0 #2b2340;margin-top:2vh;padding:0 3vmin}
+.ask .q{display:inline-block;animation:wob 1.6s ease-in-out infinite}
+.choices{position:relative;z-index:2;flex:1;display:flex;flex-wrap:wrap;align-content:center;justify-content:center;gap:5vmin;padding:3vmin}
+.pick{width:min(40vmin,42vw,300px);aspect-ratio:1;border-radius:8vmin;font-size:min(28vmin,28vw,210px);line-height:1;background:#fffffff0}
+.pick.ok{background:#b8ff9a;animation:jump .8s cubic-bezier(.3,1.6,.5,1);outline:1.5vmin solid #4cd137}
+.pick.no{animation:shake .5s}
+.pick.dim{opacity:.35;transform:scale(.85)}
+@keyframes shake{20%,60%{transform:translateX(-3vmin) rotate(-4deg)}40%,80%{transform:translateX(3vmin) rotate(4deg)}}
+.replay{position:relative;z-index:3;margin:0 auto 5vmin;width:18vmin;height:18vmin;font-size:9vmin;background:#ffcf33}
+/* GELEMBUNG */
+#bubbles .scene{--sky1:#5ec8ff;--sky2:#b9f0ff}
+.field{position:absolute;inset:0;z-index:2}
+.ball{position:absolute;bottom:-30vmin;border-radius:50%;display:grid;place-items:center;
+  background:radial-gradient(circle at 30% 28%,#ffffffee 0 9%,#ffffff55 10% 22%,#ffffff22 45%,#7fd8ff44 70%,#ffffff99 100%);
+  box-shadow:inset 0 0 3vmin #ffffffaa,0 0 2vmin #ffffff66;animation:floatup linear forwards}
+.ball span{animation:sway 2.4s ease-in-out infinite alternate;display:block}
+@keyframes floatup{to{transform:translateY(-140vh)}}
+@keyframes sway{to{transform:translateX(3vmin) rotate(8deg)}}
+.pop{position:absolute;z-index:3;pointer-events:none;font-size:14vmin;animation:popout .9s ease-out forwards}
+@keyframes popout{0%{transform:translate(-50%,-50%) scale(.6)}40%{transform:translate(-50%,-70%) scale(1.4)}100%{transform:translate(-50%,-120%) scale(1);opacity:0}}
+.spark{position:absolute;z-index:3;width:3vmin;height:3vmin;border-radius:50%;pointer-events:none;animation:spark .6s ease-out forwards}
+@keyframes spark{to{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
+.label{position:absolute;z-index:3;pointer-events:none;font-size:clamp(28px,8vmin,70px);color:#fff;-webkit-text-stroke:.4vmin #2b2340;text-shadow:0 .6vmin 0 #2b2340;transform:translate(-50%,-50%);animation:popout 1.4s ease-out forwards;white-space:nowrap}
+/* konfeti */
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:9;overflow:hidden}
+.confetti b{position:absolute;top:-10vmin;font-size:7vmin;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(120vh) rotate(var(--r))}}
+.big-star{position:fixed;z-index:10;left:50%;top:45%;font-size:40vmin;transform:translate(-50%,-50%) scale(0);animation:star 1.3s cubic-bezier(.3,1.6,.5,1) forwards;pointer-events:none}
+@keyframes star{40%{transform:translate(-50%,-50%) scale(1.1) rotate(15deg)}70%{transform:translate(-50%,-50%) scale(1) rotate(0)}100%{transform:translate(-50%,-160%) scale(.3);opacity:0}}
+@media (prefers-reduced-motion:reduce){.scene .cloud,.scene .sun,.parade{animation:none}}
+</style>
+</head>
+<body class="h-rumah">
+
+<!-- HOME -->
+<section class="screen on" id="home">
+  <div class="scene"><div class="sun"></div><div class="cloud" style="top:12vh"></div><div class="cloud" style="top:24vh;animation-delay:-20s"></div><div class="hill back"></div><div class="hill"></div></div>
+  <button class="btn lock" id="lock" aria-label="Tahan untuk keluar">🔒<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45"/></svg></button>
+  <div class="credit">Suara narator: ElevenLabs</div>
+  <div class="hint" id="hint">Tahan 2 detik untuk keluar</div>
+  <h1 class="title">Kenal Hewan</h1>
+  <p class="sub">Yuk main sama hewan!</p>
+  <div class="menu">
+    <button class="btn card c1" data-go="explore"><span class="ic">🐶</span>Kenalan</button>
+    <button class="btn card c2" data-go="quiz"><span class="ic">🙋</span>Tebak</button>
+    <button class="btn card c3" data-go="bubbles"><span class="ic">🫧</span>Gelembung</button>
+  </div>
+  <div class="parade" id="parade"></div>
+</section>
+
+<!-- KENALAN -->
+<section class="screen" id="explore">
+  <div class="scene"><div class="sun"></div><div class="cloud" style="top:14vh"></div><div class="cloud" style="top:28vh;animation-delay:-25s"></div>
+    <div class="bub" style="left:10%"></div><div class="bub" style="left:30%;animation-delay:-3s"></div><div class="bub" style="left:70%;animation-delay:-6s"></div><div class="bub" style="left:88%;animation-delay:-1.5s"></div>
+    <div class="hill back"></div><div class="hill"></div></div>
+  <div class="top">
+    <button class="btn home-btn" data-go="home" aria-label="Beranda">🏠</button>
+    <div class="tabs" id="tabs"></div>
+  </div>
+  <div class="stage">
+    <div class="say" id="say"></div>
+    <div class="animal" id="animal"></div>
+    <div class="name" id="aname"></div>
+  </div>
+  <div class="nav">
+    <button class="btn arrow" id="prev" aria-label="Sebelumnya">⬅️</button>
+    <div class="dots" id="dots"></div>
+    <button class="btn arrow" id="next" aria-label="Berikutnya">➡️</button>
+  </div>
+</section>
+
+<!-- TEBAK -->
+<section class="screen" id="quiz">
+  <div class="scene"><div class="sun"></div><div class="cloud" style="top:16vh"></div><div class="hill back"></div><div class="hill"></div></div>
+  <div class="top">
+    <button class="btn home-btn" data-go="home" aria-label="Beranda">🏠</button>
+    <div class="stars" id="stars">⭐ 0</div>
+  </div>
+  <div class="ask" id="ask"></div>
+  <div class="choices" id="choices"></div>
+  <button class="btn replay" id="replay" aria-label="Ulangi">🔊</button>
+</section>
+
+<!-- GELEMBUNG -->
+<section class="screen" id="bubbles">
+  <div class="scene"><div class="cloud" style="top:10vh"></div><div class="cloud" style="top:30vh;animation-delay:-15s"></div></div>
+  <div class="field" id="field"></div>
+  <div class="top"><button class="btn home-btn" data-go="home" aria-label="Beranda">🏠</button></div>
+</section>
+
+<script src="data.js"></script>
+<script>
+{
+const $=id=>document.getElementById(id);
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+
+/* ---- suara ---- */
+let ac=null;
+function audio(){try{if(!ac)ac=new (window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume()}catch(e){}return ac}
+function tone(f,t0,d,type='sine',v=.25,f2){const c=audio();if(!c)return;const o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.setValueAtTime(f,c.currentTime+t0);if(f2)o.frequency.exponentialRampToValueAtTime(f2,c.currentTime+t0+d);g.gain.setValueAtTime(0,c.currentTime+t0);g.gain.linearRampToValueAtTime(v,c.currentTime+t0+.01);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+t0+d);o.connect(g).connect(c.destination);o.start(c.currentTime+t0);o.stop(c.currentTime+t0+d+.05)}
+const sfx={
+ pop:()=>tone(500,0,.15,'sine',.35,1400),
+ tap:()=>tone(660,0,.1,'triangle',.2,880),
+ boing:()=>tone(220,0,.35,'triangle',.25,120),
+ yay:()=>{[523,659,784,1047].forEach((f,i)=>tone(f,i*.1,.3,'triangle',.22))},
+ whoosh:()=>tone(300,0,.25,'sine',.12,900)
+};
+/* ---- narator & suara hewan ----
+   Narator = rekaman mp3 di narasi/ (dibuat otomatis saat build). Kalau belum ada: pakai TTS HP.
+   Suara hewan = sounds/<id>.mp3. Semua diputar berurutan, yang baru memotong yang lama. */
+function speak(t){
+  try{if(window.Android&&Android.speak){Android.speak(t);return}}catch(e){}
+  try{const s=window.speechSynthesis;if(!s)return;s.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='id-ID';const v=webVoice();if(v)u.voice=v;u.rate=.92;u.pitch=v&&/natural|online/i.test(v.name)?1:1.1;s.speak(u)}catch(e){}
+}
+/* di browser: pilih suara wanita Indonesia paling natural yang tersedia */
+let _wv;
+function webVoice(){
+  if(_wv)return _wv;
+  const vs=(window.speechSynthesis&&speechSynthesis.getVoices())||[];
+  const id=vs.filter(v=>/^(id|in)[-_]/i.test(v.lang)||/indonesia/i.test(v.name));
+  const score=v=>(/gadis/i.test(v.name)?50:0)+(/natural|online|neural/i.test(v.name)?40:0)+(/google/i.test(v.name)?20:0)+(/female|wanita|damayanti/i.test(v.name)?10:0)-(/ardi|male|pria/i.test(v.name)?60:0);
+  id.sort((a,b)=>score(b)-score(a));
+  return _wv=id[0]||null;
+}
+try{speechSynthesis.onvoiceschanged=()=>{_wv=null}}catch(e){}
+function hush(){try{window.Android&&Android.stop&&Android.stop()}catch(e){}try{window.speechSynthesis&&speechSynthesis.cancel()}catch(e){}}
+/* rekaman manual (mis. dari ElevenLabs) di narasi_manual/ diutamakan, lalu rekaman otomatis narasi/, lalu TTS */
+const N=(kind,a,i)=>{const l=line(kind,a,i);return {srcs:['narasi_manual/'+l.key+'.mp3','narasi/'+l.key+'.mp3'],text:l.text}};
+const S=a=>({srcs:['sounds/'+a.id+'.mp3'],text:a.s});
+let seq=0,curAudio=null;
+function play(items){
+  const my=++seq;
+  try{if(curAudio)curAudio.pause()}catch(e){}
+  hush();
+  let i=0;
+  const next=()=>{
+    if(my!==seq||i>=items.length)return;
+    const it=items[i++];let j=0;
+    const tryNext=()=>{
+      if(my!==seq)return;
+      if(j>=it.srcs.length){if(it.text){speak(it.text);setTimeout(next,600+it.text.length*75)}else next();return}
+      const src=it.srcs[j++];let done=false;
+      const fin=()=>{if(done)return;done=true;setTimeout(next,120)};
+      const fail=()=>{if(done)return;done=true;tryNext()};
+      try{const au=new Audio(src);curAudio=au;au.onended=fin;au.onerror=fail;const p=au.play();if(p&&p.catch)p.catch(fail)}catch(e){fail()}
+    };
+    tryNext();
+  };
+  next();
+}
+function buzz(ms){try{window.Android&&Android.vibrate&&Android.vibrate(ms)}catch(e){}}
+
+/* ---- navigasi ---- */
+let cur='home';
+function go(id){
+  sfx.whoosh();
+  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));
+  cur=id;
+  stopBubbles();
+  if(id==='home'){setHab('rumah');play([N('home')])}
+  if(id==='explore')showAnimal(true);
+  if(id==='quiz')newRound();
+  if(id==='bubbles'){setHab('rumah');startBubbles();play([N('bub')])}
+}
+document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
+window.onBack=()=>{if(cur!=='home')go('home')};
+
+function setHab(h){
+  const v=HAB[h],r=document.documentElement.style;
+  r.setProperty('--sky1',v.sky1);r.setProperty('--sky2',v.sky2);r.setProperty('--ground',v.g);r.setProperty('--ground2',v.g2);r.setProperty('--sun',v.sun);
+  document.body.className='h-'+h;
+}
+
+/* ---- home ---- */
+$('parade').innerHTML=shuffle(A).slice(0,10).map(a=>`<span>${a.e}</span>`).join('');
+let lockT;
+const lock=$('lock');
+lock.addEventListener('pointerdown',()=>{lock.classList.add('hold');$('hint').classList.add('show');lockT=setTimeout(()=>{try{Android.exitApp()}catch(e){}},2000)});
+['pointerup','pointerleave','pointercancel'].forEach(ev=>lock.addEventListener(ev,()=>{clearTimeout(lockT);lock.classList.remove('hold');setTimeout(()=>$('hint').classList.remove('show'),1200)}));
+
+/* ---- kenalan ---- */
+let hab='rumah',idx=0,sayT;
+const list=()=>A.filter(a=>a.h===hab);
+$('tabs').innerHTML=Object.keys(HAB).map(h=>`<button class="btn tab" data-h="${h}">${HAB[h].ic}</button>`).join('');
+$('tabs').addEventListener('click',e=>{const b=e.target.closest('.tab');if(!b)return;hab=b.dataset.h;idx=0;sfx.tap();showAnimal(true)});
+function showAnimal(announce){
+  setHab(hab);
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.h===hab));
+  const L=list(),a=L[idx];
+  const el=$('animal');el.textContent=a.e;el.classList.remove('jump');void el.offsetWidth;el.classList.add('jump');
+  $('aname').textContent=a.n;
+  $('dots').innerHTML=L.map((_,i)=>`<i class="${i===idx?'on':''}"></i>`).join('');
+  $('say').classList.remove('show');
+  if(announce)play([N('intro',a)]);
+}
+function step(d){const L=list();idx=(idx+d+L.length)%L.length;sfx.whoosh();showAnimal(true)}
+$('next').addEventListener('click',()=>step(1));
+$('prev').addEventListener('click',()=>step(-1));
+let tapN=0;
+$('animal').addEventListener('click',()=>{
+  const a=list()[idx],el=$('animal');
+  el.classList.remove('jump');void el.offsetWidth;el.classList.add('jump');
+  sfx.boing();buzz(40);
+  tapN++;
+  const s=$('say');s.textContent=a.s;s.classList.add('show');
+  const k=tapN%3;
+  play([S(a),k===1?N('itu',a):k===2?N('tiru',a):N('after')]);
+  clearTimeout(sayT);sayT=setTimeout(()=>s.classList.remove('show'),2200);
+});
+let sx=null;
+$('explore').addEventListener('touchstart',e=>{sx=e.touches[0].clientX},{passive:true});
+$('explore').addEventListener('touchend',e=>{if(sx===null)return;const dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>70)step(dx<0?1:-1);sx=null});
+
+/* ---- tebak ---- */
+let stars=0,streak=0,target=null,busy=false;
+function newRound(){
+  busy=false;
+  const n=streak>=5?3:2;
+  const opts=shuffle(A).slice(0,n);
+  target=rnd(opts);
+  setHab(target.h);
+  $('ask').innerHTML=`<span class="q">Mana ${target.n}?</span>`;
+  $('choices').innerHTML=opts.map((a,i)=>`<button class="btn pick" data-i="${A.indexOf(a)}">${a.e}</button>`).join('');
+  play([N('ask',target)]);
+}
+$('choices').addEventListener('click',e=>{
+  const b=e.target.closest('.pick');if(!b||busy)return;
+  const a=A[+b.dataset.i];
+  if(a===target){
+    busy=true;stars++;streak++;
+    $('stars').textContent='⭐ '+stars;
+    b.classList.add('ok');
+    document.querySelectorAll('.pick').forEach(p=>p!==b&&p.classList.add('dim'));
+    sfx.yay();buzz(80);celebrate(stars%5===0);
+    play([N('praise'),N('itu',a),S(a)]);
+    setTimeout(()=>{if(cur==='quiz')newRound()},4800);
+  }else{
+    streak=0;
+    b.classList.remove('no');void b.offsetWidth;b.classList.add('no');
+    sfx.boing();
+    play([N('wrong'),N('ask',target)]);
+  }
+});
+$('replay').addEventListener('click',()=>{sfx.tap();play([N('ask',target)])});
+
+function celebrate(big){
+  const c=document.createElement('div');c.className='confetti';
+  const bits=['⭐','🌟','🎈','💛','🎉','✨'];
+  c.innerHTML=Array.from({length:big?40:22},()=>`<b style="left:${Math.random()*100}vw;animation-duration:${1.6+Math.random()*1.6}s;animation-delay:${Math.random()*.4}s;--r:${Math.random()*720-360}deg">${rnd(bits)}</b>`).join('');
+  document.body.appendChild(c);setTimeout(()=>c.remove(),3800);
+  if(big){const s=document.createElement('div');s.className='big-star';s.textContent='🌟';document.body.appendChild(s);setTimeout(()=>s.remove(),1400)}
+}
+
+/* ---- gelembung ---- */
+let bubT=null;
+const COLORS=['#ff6b8b','#ffd93b','#5ee07a','#58c7ff','#b48cff','#ff9f43'];
+function spawn(){
+  const f=$('field');if(f.children.length>=8)return;
+  const a=rnd(A),size=20+Math.random()*10;
+  const b=document.createElement('div');b.className='ball';
+  b.style.cssText=`width:${size}vmin;height:${size}vmin;left:${Math.random()*(100-size*0.9)}vw;font-size:${size*.55}vmin;animation-duration:${7+Math.random()*4}s`;
+  b.innerHTML=`<span>${a.e}</span>`;
+  b.addEventListener('animationend',ev=>{if(ev.target===b)b.remove()});
+  b.addEventListener('pointerdown',ev=>{
+    const r=b.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;
+    b.remove();sfx.pop();buzz(30);
+    for(let i=0;i<12;i++){const s=document.createElement('i');s.className='spark';const ang=i/12*Math.PI*2;s.style.cssText=`left:${x}px;top:${y}px;background:${rnd(COLORS)};--dx:${Math.cos(ang)*18}vmin;--dy:${Math.sin(ang)*18}vmin`;f.appendChild(s);setTimeout(()=>s.remove(),650)}
+    const p=document.createElement('div');p.className='pop';p.style.cssText=`left:${x}px;top:${y}px`;p.textContent=a.e;f.appendChild(p);setTimeout(()=>p.remove(),950);
+    const l=document.createElement('div');l.className='label';l.style.cssText=`left:${Math.min(Math.max(x,120),innerWidth-120)}px;top:${y-r.height*0.6}px`;l.textContent=a.n;f.appendChild(l);setTimeout(()=>l.remove(),1450);
+    play([S(a),N('itu',a)]);
+  });
+  f.appendChild(b);
+}
+function startBubbles(){stopBubbles();spawn();bubT=setInterval(spawn,1100)}
+function stopBubbles(){clearInterval(bubT);bubT=null;$('field').innerHTML=''}
+
+/* aktifkan audio di sentuhan pertama */
+document.addEventListener('pointerdown',()=>audio(),{once:true});
+setHab('rumah');
+}
+</script>
+</body>
+</html>
