@@ -1,0 +1,54 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Cache rekaman narator
+        uses: actions/cache@v4
+        with:
+          path: app/src/main/assets/narasi
+          key: narasi-v1-${{ hashFiles('app/src/main/assets/data.js', 'tools/narasi.py') }}
+
+      - name: Buat suara narator cadangan (Gadis)
+        continue-on-error: true
+        run: |
+          pip install edge-tts
+          python tools/narasi.py
+          ls app/src/main/assets/narasi | wc -l
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build APK
+        run: gradle assembleRelease --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: KenalHewan-APK
+          path: app/build/outputs/apk/release/*.apk
